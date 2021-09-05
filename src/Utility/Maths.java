@@ -137,6 +137,44 @@ public class Maths
 		return factors;
 	}
 	
+	//Returns all factors of n, not necessarily in order, given the prime factorization of n
+	public static ArrayList<Long> getFactors(ArrayList<Integer> pf)
+	{
+		ArrayList<Long> factors = new ArrayList<Long>();
+		int[] pows = new int[pf.size() / 2]; //Stores the powers of the prime
+		for (int i = 1; i < pf.size(); i += 2)
+			pows[i / 2] = pf.get(i);
+		Iterator itr = new Iterator(pf.size() / 2, pows, ITR_TYPE.NORMAL);
+		
+		do
+		{
+			long num = 1;
+			
+			//DONT CHANGE OUR pow function TO (long)(Math.pow(...)) because while trying to check if there was any errors in double rounding, by doing 100% integer calculations,
+			//that is, calculating the values in long instead, I found out that calculating it in long is just faster than the Math function somehow.
+			//We found this out while doing Euler 198.
+			//If you use the second statement (now commented out) instead of the first one, it takes about 24s to get the answer in Euler 198.
+			//However, if you use the first one, it only takes around 11s.
+			for (int i = 0; i < itr.indices.length; i++)
+			{
+				num *= pow(pf.get(i * 2), itr.indices[i]);
+				//num *= Math.pow(pf.get(i * 2), itr.indices[i]);
+			}
+			factors.add(num);
+		}
+		while (itr.next());
+		
+		return factors;
+	}
+	
+	private static long pow(long n, int pow)
+	{
+		long result = 1;
+		for (int i = 0; i < pow; i++)
+			result *= n;
+		return result;
+	}
+	
 	//Returns prime factorization of a number given that you have produced an array of primes with appropriate limit
 	public static ArrayList<Integer> getPrimeFactorization(int n, ArrayList<Integer> primes)
 	{
@@ -166,10 +204,65 @@ public class Maths
 		return pf;
 	}
 	
+	//Returns prime factorization of the product of the prime factorizations (Basically sums up the exponents of primes that are common and adds any uncommon primes)  
+	public static ArrayList<Integer> multiplyPrimeFactorizations(ArrayList<Integer> pf1, ArrayList<Integer> pf2)
+	{
+		ArrayList<Integer> pf = new ArrayList<Integer>();
+		int i = 0, j = 0;
+		while (i < pf1.size() || j < pf2.size())
+		{
+			if (i < pf1.size() && j < pf2.size())
+			{
+				if (pf1.get(i) < pf2.get(j)) //This means prime at pf1 is less than prime at pf2, so we add that one to pf first
+				{
+					pf.add(pf1.get(i));
+					pf.add(pf1.get(i + 1));
+					i += 2;
+				}
+				else if (pf1.get(i) > pf2.get(j)) //This means prime at pf2 is less than prime at pf1, so we add that one to pf first
+				{
+					pf.add(pf2.get(j));
+					pf.add(pf2.get(j + 1));
+					j += 2;
+				}
+				else //Primes are equal, so we sum their values up
+				{
+					pf.add(pf1.get(i));
+					pf.add(pf1.get(i + 1) + pf2.get(j + 1));
+					i += 2;
+					j += 2;
+				}
+			}
+			else if (i < pf1.size()) //If only i is in bounds, add prime at pf1
+			{
+				pf.add(pf1.get(i));
+				pf.add(pf1.get(i + 1));
+				i += 2;
+			}
+			else //If only j is in bounds, add prime at pf2
+			{
+				pf.add(pf2.get(j));
+				pf.add(pf2.get(j + 1));
+				j += 2;
+			}
+		}
+		
+		return pf;
+	}
+	
 	//APPROXIMATE: ONLY WORKS FOR NUMBERS LESS THAN 1,510,441 (1229*1229) (Square of the 201st prime) (OLD NUMBER, CALCULATED WHEN LENGTH OF PRIME ARRAY WAS 201)
 	//NOW IT SHOULD WORK FOR NUMBERS LESS THAN 99,460,729 (9973*9973)
 	//SURPRISING MOTHERFUCKING COINCIDENCE: LENGTH OF THE NEW PRIMES ARRAY IS 1229. HOW DAFUQ??? IDK
 	//I DISCOVERED THE ABOVE FACT LIKE DAYS AFTER I ADDED THE ABOVE COMMENT ABOUT 99460729
+	//Holy. Shit. While solving Euler 198, I discovered a bug in this method. I had been using this function for about a year without any problems now.
+	//The bug was in the if statement. If n happens to be a power of 9973 [The last prime in the 'primes' array] at any point in time, m will keep going until it 
+	//becomes primes.length - 1. At this point, we add 9973 and its power to the pf array and increment m by one. BUT NOW m == primes.length, so that if block
+	//is executed and we add a blank 1, 1 at the end. To fix this, we just have to add a "&& n != 1" to the if statement.
+	//But god damn this gave me problems in Euler 198. Because of the 1,1 at the end, the multiplyPrimeFactorizations() method also copied the 1,1 at the end to the
+	//new combined pf array. And then the getFactors() method returned every single factor TWICE, because ofc the Iterator will consider 1^0 and 1^1 at the end as
+	//different. Holy fucking shit. What an obscure and rare bug that managed to bite us in the ass.
+	//WAIT WTF. I went to the other getPrimeFactorization method,that is, getPrimeFactorization(int n, ArrayList primes) so I can fix this bug over there too, 
+	//AND IN THERE WE ALREADY HAVE FIXED THIS BUG. WHAT THE ACTUAL FUCK??? WE ALREADY HAVE THE n != 1 condition IN THE IF STATEMENT. 
 	public static ArrayList<Integer> getPrimeFactorization(int n)
 	{
 		ArrayList<Integer> pf = new ArrayList<Integer>();
@@ -188,7 +281,7 @@ public class Maths
 				pf.add(k);
 			}
 			m++;
-			if (m >= primes.length)
+			if (m >= primes.length && n != 1)
 			{
 				pf.add(n);
 				pf.add(1);
