@@ -22,7 +22,7 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 {
 	public static JFrame frame;
 	
-	public final int HEIGHT = 1000, WIDTH = 1000;
+	public int HEIGHT = 1000, WIDTH = 1000;
 	public int fps = 0, ups = 0;
 	public GLCanvas glcanvas;
 	
@@ -41,7 +41,7 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 	
 	Thread th;
 	
-	public void start(GLDisplay main)
+	public void start(GLDisplay main, int width, int height)
 	{
 		this.main = main;
 		GLProfile glprofile = GLProfile.get(GLProfile.GL2);
@@ -52,6 +52,8 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 		glcanvas.addMouseListener(this);
 		glcanvas.addMouseMotionListener(this);
 		glcanvas.addMouseWheelListener(this);
+		WIDTH = width;
+		HEIGHT = height;
 		glcanvas.setSize(this.WIDTH, this.HEIGHT);
 		
 		frame = new JFrame();
@@ -66,6 +68,11 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 		
 		th = new Thread(this);
 		th.start();
+	}
+	
+	public void start(GLDisplay main)
+	{
+		start(main, 1000, 1000);
 	}
 	
 	public void run()
