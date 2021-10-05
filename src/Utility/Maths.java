@@ -1,5 +1,6 @@
 package Utility;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 public class Maths
@@ -174,7 +175,7 @@ public class Maths
 	}
 	
 	//Returns prime factorization of a number given that you have produced an array of primes with appropriate limit
-	public static ArrayList<Integer> getPrimeFactorization(int n, ArrayList<Integer> primes)
+	public static ArrayList<Integer> getPrimeFactorization(long n, ArrayList<Integer> primes)
 	{
 		ArrayList<Integer> pf = new ArrayList<Integer>();
 		int m = 0;
@@ -194,7 +195,7 @@ public class Maths
 			m++;
 			if (m >= primes.size() && n != 1)
 			{
-				pf.add(n);
+				pf.add((int) n);
 				pf.add(1);
 				break;
 			}
@@ -248,7 +249,57 @@ public class Maths
 		return pf;
 	}
 	
-	public static ArrayList<Integer> getPrimeFactorization(int n)
+	//Returns prime factorization of the division of pf1 by pf2 (Basically finds the difference between exponents of primes that are common and adds any uncommon primes)  
+	public static ArrayList<Integer> dividePrimeFactorizations(ArrayList<Integer> pf1, ArrayList<Integer> pf2)
+	{
+		ArrayList<Integer> pf = new ArrayList<Integer>();
+		int i = 0, j = 0;
+		while (i < pf1.size() || j < pf2.size())
+		{
+			if (i < pf1.size() && j < pf2.size())
+			{
+				if (pf1.get(i) < pf2.get(j)) //This means prime at pf1 is less than prime at pf2, so we add that one to pf first
+				{
+					pf.add(pf1.get(i));
+					pf.add(pf1.get(i + 1));
+					i += 2;
+				}
+				else if (pf1.get(i) > pf2.get(j)) //If a prime exists in pf2 that doesn't exist in pf1, pf1 is not divisible by pf2
+				{
+					throw new ArithmeticException("Fractional division in dividePrimeFactorizations() method");
+					/*pf.add(pf2.get(j));
+					pf.add(pf2.get(j + 1));
+					j += 2;*/
+				}
+				else //Primes are equal, so we find the difference between the values
+				{
+					pf.add(pf1.get(i));
+					pf.add(pf1.get(i + 1) - pf2.get(j + 1));
+					i += 2;
+					j += 2;
+				}
+			}
+			else if (i < pf1.size()) //If only i is in bounds, add prime at pf1
+			{
+				pf.add(pf1.get(i));
+				pf.add(pf1.get(i + 1));
+				i += 2;
+			}
+			else //If only j is in bounds, add prime at pf2
+			{
+				pf.add(pf2.get(j));
+				pf.add(pf2.get(j + 1));
+				j += 2;
+			}
+		}
+		
+		return pf;
+	}
+	
+	//NOTE : Only works for longs whose square root can be contained in an int
+	//Since int max is 2^32-1, (int max)^2 will be 2^64 - a small amount => This will work for pretty much all long values
+	//Also at that point the Math.sqrt function will also just give us an inaccurate value
+	public static ArrayList<Integer> getPrimeFactorization(long n)
 	{
 		return getPrimeFactorization(n, Maths.sieveGenPrimes((int) Math.sqrt(n)));
 	}
@@ -511,6 +562,34 @@ public class Maths
 			i++;
 		}
 		return num / denom;
+	}
+	
+	//NOTE: MAY NOT GIVE ANSWER EVEN IF FINAL VALUE OF nCr IS IN LONG RANGE
+	public static long chooseBigint(long n, long r)
+	{
+		if (r > n)
+			return 0;
+		BigInteger denom = bigFactorial((int) Math.min(n - r, r));
+		BigInteger num = BigInteger.ONE;
+		BigInteger i = (n - r + 1 > r + 1) ? BigInteger.valueOf(n - r + 1) : BigInteger.valueOf(r + 1);
+		BigInteger bn = BigInteger.valueOf(n);
+		while (i.compareTo(bn) <= 0)
+		{
+			num = num.multiply(i);
+			i = i.add(BigInteger.ONE);
+		}
+		return num.divide(denom).longValueExact();
+	}
+	
+	public static BigInteger bigFactorial(int n)
+	{
+		BigInteger result = BigInteger.ONE;
+		for (int i = 2; i <= n; i++)
+		{
+			result = result.multiply(BigInteger.valueOf(i));
+		}
+		
+		return result;
 	}
 	
 	public static double sigmoid(double val)

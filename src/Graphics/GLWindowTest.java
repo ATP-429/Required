@@ -23,7 +23,6 @@ public class GLWindowTest extends GLDisplay
 	@Override
 	public void init(GLAutoDrawable drawable, int WIDTH, int HEIGHT)
 	{
-		// TODO Auto-generated method stub
 		
 	}
 }

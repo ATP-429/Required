@@ -143,6 +143,11 @@ public class Vector2i
 		return false;
 	}
 	
+	public Vector2i round()
+	{
+		return new Vector2i(Math.round(this.x), Math.round(this.y));
+	}
+	
 	public Vector2i clone()
 	{
 		return new Vector2i(this.x, this.y);
