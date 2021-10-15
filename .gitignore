@@ -4,6 +4,7 @@
 #Ignore files specific to our PC
 .classpath
 .project
+.pydevproject
 
 #Ignore bin file
 bin/

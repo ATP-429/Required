@@ -20,10 +20,13 @@ import com.jogamp.opengl.awt.GLCanvas;
 
 public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener
 {
+	private static final String CMD_FONT_PATH = "/cmdFont.png";
+	
 	public static JFrame frame;
 	
 	public int HEIGHT = 1000, WIDTH = 1000;
-	public int fps = 0, ups = 0;
+	public int fps = 0;
+	public int msPerFrame = 1000 / 60;
 	public GLCanvas glcanvas;
 	
 	public volatile int mouseX, mouseY;
@@ -37,9 +40,12 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 	public boolean[] mousePressed = new boolean[120];
 	public boolean[] prevMousePressed = new boolean[120];
 	
+	private boolean displayOnCall;
+	
 	IntBuffer textures = IntBuffer.allocate(100);
 	
 	Thread th;
+	
 	
 	public void start(GLDisplay main, int width, int height)
 	{
@@ -70,17 +76,33 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 		th.start();
 	}
 	
+	public void start(GLDisplay main, int width, int height, boolean displayOnCall)
+	{
+		this.displayOnCall = displayOnCall;
+		start(main, width, height);
+	}
+	
 	public void start(GLDisplay main)
 	{
 		start(main, 1000, 1000);
 	}
 	
+	public void start(GLDisplay main, boolean displayOnCall)
+	{
+		this.displayOnCall = displayOnCall;
+		start(main);
+	}
+	
 	public void run()
 	{
-		while (true)
+		if (displayOnCall)
 		{
 			glcanvas.display();
+			return;
 		}
+		
+		while (true)
+			glcanvas.display();
 	}
 	
 	public void display(GLAutoDrawable drawable)
@@ -97,7 +119,7 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 		Renderer.genInternalTextures(gl);
 		try
 		{
-			Renderer.loadSimpleFont("src/resources/cmdFont.png", 95, 8, 12, 0xFFFFFFFF, gl);
+			Renderer.loadSimpleFont(CMD_FONT_PATH, 95, 8, 12, 0xFFFFFFFF, gl);
 		}
 		catch (Exception e)
 		{
@@ -112,7 +134,7 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
 		try
 		{
-			Renderer.loadSimpleFont("src/resources/cmdFont.png", 95, 8, 12, fontCol, gl);
+			Renderer.loadSimpleFont(CMD_FONT_PATH, 95, 8, 12, fontCol, gl);
 		}
 		catch (Exception e)
 		{
@@ -135,6 +157,11 @@ public class GLWindow implements Runnable, GLEventListener, KeyListener, MouseLi
 		GL2 gl = drawable.getGL().getGL2();
 		gl.glGenTextures(100, textures);
 		initBasicDisplay(gl);
+	}
+	
+	public void repaint()
+	{
+		glcanvas.display();
 	}
 	
 	public void keyTyped(KeyEvent e)

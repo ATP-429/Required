@@ -66,7 +66,7 @@ public class Renderer
 	
 	public static void loadSimpleFont(String path, int charNum, int width, int height, int color, GL2 gl) throws IOException
 	{
-		BufferedImage img = ImageIO.read(new File(path));
+		BufferedImage img = ImageIO.read(Renderer.class.getResource(path));
 		
 		fontStartID = nt;
 		fontWidth = width;

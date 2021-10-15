@@ -1,13 +1,48 @@
 package Utility;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
 public class Maths
 {
+	private static final String PRIMES_PATH = "/primes.txt";
+	
+	static ArrayList<Integer> primes;
+	
 	//PRIME Functions:
+	public static void loadPrimes()
+	{
+		if (primes == null)
+		{
+			primes = new ArrayList<Integer>();
+			BufferedReader br = new BufferedReader(new InputStreamReader(Maths.class.getResourceAsStream((PRIMES_PATH))));
+			
+			try
+			{
+				while (br.ready())
+					primes.add(Integer.parseInt(br.readLine()));
+				br.close();
+			}
+			catch (IOException e)
+			{
+				System.err.println("ERROR : An error occured while reading primes.txt");
+				return;
+			}
+			
+			System.out.println("Successfully read primes.txt");
+			
+		}
+	}
 	
 	//Generates prime numbers that are less than or equal to n
+	/**
+	 * @deprecated use {@link #sieveGenPrimes()} instead.
+	 */
+	@Deprecated
 	public static ArrayList<Long> genPrimes(long n)
 	{
 		ArrayList<Long> result = new ArrayList<Long>();
@@ -25,6 +60,10 @@ public class Maths
 		return result;
 	}
 	
+	/**
+	 * @deprecated use {@link #sieveGenPrimes()} instead.
+	 */
+	@Deprecated
 	public static ArrayList<Integer> genPrimes(int n)
 	{
 		ArrayList<Integer> result = new ArrayList<Integer>();
@@ -177,6 +216,9 @@ public class Maths
 	//Returns prime factorization of a number given that you have produced an array of primes with appropriate limit
 	public static ArrayList<Integer> getPrimeFactorization(long n, ArrayList<Integer> primes)
 	{
+		if ((long) primes.get(primes.size() - 1) * primes.get(primes.size() - 1) < n)
+			System.err.println("WARNING : Insufficient number of primes passed to getPrimeFactorization method. Prime factorizations may be inaccurate. If primes were not passed manually, do so and put a sufficient amount in.");
+		
 		ArrayList<Integer> pf = new ArrayList<Integer>();
 		int m = 0;
 		while (n != 1)
@@ -193,7 +235,7 @@ public class Maths
 				pf.add(k);
 			}
 			m++;
-			if (m >= primes.size() && n != 1)
+			if ((m >= primes.size() && n != 1) || (m < primes.size() && primes.get(m) * primes.get(m) > n && n != 1)) //Basically, no need to go further if we've exhausted all the primes
 			{
 				pf.add((int) n);
 				pf.add(1);
@@ -301,12 +343,14 @@ public class Maths
 	//Also at that point the Math.sqrt function will also just give us an inaccurate value
 	public static ArrayList<Integer> getPrimeFactorization(long n)
 	{
-		return getPrimeFactorization(n, Maths.sieveGenPrimes((int) Math.sqrt(n)));
+		loadPrimes();
+		return getPrimeFactorization(n, primes);
 	}
 	
-	public static int phi(int n)
+	//Returns phi of given integer n, given a primes array
+	public static int phi(int n, ArrayList<Integer> primes)
 	{
-		ArrayList<Integer> pf = getPrimeFactorization(n);
+		ArrayList<Integer> pf = getPrimeFactorization(n, primes);
 		int result = 1;
 		for (int i = 0; i < pf.size(); i += 2)
 		{
@@ -315,6 +359,12 @@ public class Maths
 		}
 		
 		return result;
+	}
+	
+	public static int phi(int n)
+	{
+		loadPrimes();
+		return phi(n, primes);
 	}
 	
 	//Returns the number of factors of n
